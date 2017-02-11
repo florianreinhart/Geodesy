@@ -6,6 +6,11 @@
 //
 //
 
+#if os(OSX) || os(iOS)
+    import Darwin
+#elseif os(Linux)
+    import Glibc
+#endif
 import XCTest
 @testable import GeodesySpherical
 

@@ -9,6 +9,13 @@
 import XCTest
 @testable import GeodesySpherical
 
+extension Double {
+    func rounded(to places: Int) -> Double {
+        let factor = pow(10.0, Double(places))
+        return (self * factor).rounded() / factor
+    }
+}
+
 final class GeodesySphericalTest: XCTestCase {
     
     static var allTests : [(String, (GeodesySphericalTest) -> () throws -> Void)] {
@@ -33,58 +40,47 @@ final class GeodesySphericalTest: XCTestCase {
         let cambridgeToParis = cambridge.distance(to: paris)
         let parisToCambridge = paris.distance(to: cambridge)
         
-        let cambridgeToParisFormatted = String(format: "%.f", cambridgeToParis)
-        let parisToCambridgeFormatted = String(format: "%.f", parisToCambridge)
-        
         XCTAssertEqual(cambridgeToParis, parisToCambridge)
-        XCTAssertEqual(cambridgeToParisFormatted, "404279")
-        XCTAssertEqual(parisToCambridgeFormatted, "404279")
+        XCTAssertEqual(cambridgeToParis.rounded(to: 0), 404279)
+        XCTAssertEqual(parisToCambridge.rounded(to: 0), 404279)
     }
     
     func testInitialBearing() {
         let cambridgeToParis = cambridge.bearing(to: paris)
         let parisToCambridge = paris.bearing(to: cambridge)
         
-        let cambridgeToParisFormatted = String(format: "%.1f", cambridgeToParis)
-        let parisToCambridgeFormatted = String(format: "%.1f", parisToCambridge)
-        
-        XCTAssertEqual(cambridgeToParisFormatted, "156.2")
-        XCTAssertEqual(parisToCambridgeFormatted, "337.9")
+        XCTAssertEqual(cambridgeToParis.rounded(to: 1), 156.2)
+        XCTAssertEqual(parisToCambridge.rounded(to: 1), 337.9)
     }
     
     func testFinalBearing() {
         let cambridgeToParis = cambridge.finalBearing(to: paris)
         let parisToCambridge = paris.finalBearing(to: cambridge)
         
-        let cambridgeToParisFormatted = String(format: "%.1f", cambridgeToParis)
-        let parisToCambridgeFormatted = String(format: "%.1f", parisToCambridge)
-        
-        XCTAssertEqual(cambridgeToParisFormatted, "157.9")
-        XCTAssertEqual(parisToCambridgeFormatted, "336.2")
+        XCTAssertEqual(cambridgeToParis.rounded(to: 1), 157.9)
+        XCTAssertEqual(parisToCambridge.rounded(to: 1), 336.2)
     }
     
     func testMidpoint() {
         let cambridgeToParis = cambridge.midpoint(to: paris)
         let parisToCambridge = paris.midpoint(to: cambridge)
         
-        let cambridgeToParisFormatted = String(format: "%.6f,%.6f", cambridgeToParis.latitude, cambridgeToParis.longitude)
-        let parisToCambridgeFormatted = String(format: "%.6f,%.6f", parisToCambridge.latitude, parisToCambridge.longitude)
-        
         XCTAssertEqual(cambridgeToParis, parisToCambridge)
-        XCTAssertEqual(cambridgeToParisFormatted, "50.536327,1.274614")
-        XCTAssertEqual(parisToCambridgeFormatted, "50.536327,1.274614")
+        XCTAssertEqual(cambridgeToParis.latitude.rounded(to: 6), 50.536327)
+        XCTAssertEqual(cambridgeToParis.longitude.rounded(to: 6), 1.274614)
+        XCTAssertEqual(parisToCambridge.latitude.rounded(to: 6), 50.536327)
+        XCTAssertEqual(parisToCambridge.longitude.rounded(to: 6), 1.274614)
     }
     
     func testIntermediatePoint() {
         let cambridgeToParis = cambridge.intermediatePoint(to: paris, fraction: 0.25)
         let parisToCambridge = paris.intermediatePoint(to: cambridge, fraction: 0.25)
-        
-        let cambridgeToParisFormatted = String(format: "%.6f,%.6f", cambridgeToParis.latitude, cambridgeToParis.longitude)
-        let parisToCambridgeFormatted = String(format: "%.6f,%.6f", parisToCambridge.latitude, parisToCambridge.longitude)
-        
+
         XCTAssertNotEqual(cambridgeToParis, parisToCambridge)
-        XCTAssertEqual(cambridgeToParisFormatted, "51.372084,0.707337")
-        XCTAssertEqual(parisToCambridgeFormatted, "49.697910,1.822107")
+        XCTAssertEqual(cambridgeToParis.latitude.rounded(to: 6), 51.372084)
+        XCTAssertEqual(cambridgeToParis.longitude.rounded(to: 6), 0.707337)
+        XCTAssertEqual(parisToCambridge.latitude.rounded(to: 6), 49.697910)
+        XCTAssertEqual(parisToCambridge.longitude.rounded(to: 6), 1.822107)
     }
     
     func testDestination() {
@@ -93,9 +89,9 @@ final class GeodesySphericalTest: XCTestCase {
         let bearing = Degrees(300.7)
         
         let destination = greenwich.destination(with: distance, bearing: bearing)
-        let destinationFormatted = String(format: "%.6f,%.6f", destination.latitude, destination.longitude)
         
-        XCTAssertEqual(destinationFormatted, "51.513546,-0.098345")
+        XCTAssertEqual(destination.latitude.rounded(to: 6), 51.513546)
+        XCTAssertEqual(destination.longitude.rounded(to: 6), -0.098345)
     }
     
     func testIntersection() {
@@ -106,35 +102,35 @@ final class GeodesySphericalTest: XCTestCase {
         
         // toward 1,1 N,E nearest
         let intersection1 = Coordinate.intersection(of: (Coordinate(0, 1), N), with: (Coordinate(1, 0), E))!
-        let intersection1Formatted = String(format: "%.6f,%.6f", intersection1.latitude, intersection1.longitude)
-        XCTAssertEqual(intersection1Formatted, "0.999848,1.000000")
+        XCTAssertEqual(intersection1.latitude.rounded(to: 6), 0.999848)
+        XCTAssertEqual(intersection1.longitude.rounded(to: 6), 1.000000)
         
         // toward 1,1 E,N nearest
         let intersection2 = Coordinate.intersection(of: (Coordinate(1, 0), E), with: (Coordinate(0, 1), N))!
-        let intersection2Formatted = String(format: "%.6f,%.6f", intersection2.latitude, intersection2.longitude)
-        XCTAssertEqual(intersection2Formatted, "0.999848,1.000000")
+        XCTAssertEqual(intersection2.latitude.rounded(to: 6), 0.999848)
+        XCTAssertEqual(intersection2.longitude.rounded(to: 6), 1.000000)
         
         // away 1,1 S,W antipodal
         let intersection3 = Coordinate.intersection(of: (Coordinate(0, 1), S), with: (Coordinate(1, 0), W))!
-        let intersection3Formatted = String(format: "%.6f,%.6f", intersection3.latitude, intersection3.longitude)
-        XCTAssertEqual(intersection3Formatted, "-0.999848,-179.000000")
+        XCTAssertEqual(intersection3.latitude.rounded(to: 6), -0.999848)
+        XCTAssertEqual(intersection3.longitude.rounded(to: 6), -179.000000)
         
         // away 1,1 W,S antipodal
         let intersection4 = Coordinate.intersection(of: (Coordinate(1, 0), W), with: (Coordinate(0, 1), S))!
-        let intersection4Formatted = String(format: "%.6f,%.6f", intersection4.latitude, intersection4.longitude)
-        XCTAssertEqual(intersection4Formatted, "-0.999848,-179.000000")
+        XCTAssertEqual(intersection4.latitude.rounded(to: 6), -0.999848)
+        XCTAssertEqual(intersection4.longitude.rounded(to: 6), -179.000000)
         
         // 1E/90E N,E nearest
         let intersection5 = Coordinate.intersection(of: (Coordinate(0, 1), N), with: (Coordinate(1, 92), E))!
-        let intersection5Formatted = String(format: "%.6f,%.6f", intersection5.latitude, intersection5.longitude)
-        XCTAssertEqual(intersection5Formatted, "0.017454,-179.000000")
+        XCTAssertEqual(intersection5.latitude.rounded(to: 6), 0.017454)
+        XCTAssertEqual(intersection5.longitude.rounded(to: 6), -179.000000)
         
         // stn-cdg-bxl
         let stn = Coordinate(51.8853, 0.2545)
         let cdg = Coordinate(49.0034, 2.5735)
         let intersection6 = Coordinate.intersection(of: (stn, 108.547), with: (cdg, 32.435))!
-        let intersection6Formatted = String(format: "%.6f,%.6f", intersection6.latitude, intersection6.longitude)
-        XCTAssertEqual(intersection6Formatted, "50.907809,4.508410")
+        XCTAssertEqual(intersection6.latitude.rounded(to: 6), 50.907809)
+        XCTAssertEqual(intersection6.longitude.rounded(to: 6), 4.508410)
     }
     
     func testCrossTrack() {
@@ -142,11 +138,8 @@ final class GeodesySphericalTest: XCTestCase {
         let distance1 = Coordinate(53.2611, -0.7972).crossTrackDistanceToPath(from: bradwell, to: Coordinate(53.1887, 0.1334))
         let distance2 = Coordinate(10, 1).crossTrackDistanceToPath(from: Coordinate(0, 0), to: Coordinate(0, 2))
         
-        let distance1Formatted = String(format: "%.1f", distance1)
-        let distance2Formatted = String(format: "%.1f", distance2)
-        
-        XCTAssertEqual(distance1Formatted, "-307.5")
-        XCTAssertEqual(distance2Formatted, "-1111949.3")
+        XCTAssertEqual(distance1.rounded(to: 1), -307.5)
+        XCTAssertEqual(distance2.rounded(to: 1), -1111949.3)
     }
     
     func testMaxLatitude() {
@@ -160,12 +153,9 @@ final class GeodesySphericalTest: XCTestCase {
     }
     
     func testCrossingParallels() {
-        let parallels = Coordinate.crossingParallels(coordinate1: Coordinate(0, 0), coordinate2: Coordinate(60, 30), latitude: 30)!
-        
-        let longitude1Formatted = String(format: "%.6f", parallels.longitude1)
-        let longitude2Formatted = String(format: "%.6f", parallels.longitude2)
-        
-        XCTAssertEqual(longitude1Formatted, "9.594068")
-        XCTAssertEqual(longitude2Formatted, "170.405932")
+        let (longitude1, longitude2) = Coordinate.crossingParallels(coordinate1: Coordinate(0, 0), coordinate2: Coordinate(60, 30), latitude: 30)!
+
+        XCTAssertEqual(longitude1.rounded(to: 6), 9.594068)
+        XCTAssertEqual(longitude2.rounded(to: 6), 170.405932)
     }
 }

@@ -23,20 +23,18 @@ extension Double {
 
 final class GeodesySphericalTest: XCTestCase {
     
-    static var allTests : [(String, (GeodesySphericalTest) -> () throws -> Void)] {
-        return [
-            ("testDistance", testDistance),
-            ("testInitialBearing", testInitialBearing),
-            ("testFinalBearing", testFinalBearing),
-            ("testMidpoint", testMidpoint),
-            ("testIntermediatePoint", testIntermediatePoint),
-            ("testDestination", testDestination),
-            ("testIntersection", testIntersection),
-            ("testCrossTrack", testCrossTrack),
-            ("testMaxLatitude", testMaxLatitude),
-            ("testCrossingParallels", testCrossingParallels)
-        ]
-    }
+    static let allTests = [
+        ("testDistance", testDistance),
+        ("testInitialBearing", testInitialBearing),
+        ("testFinalBearing", testFinalBearing),
+        ("testMidpoint", testMidpoint),
+        ("testIntermediatePoint", testIntermediatePoint),
+        ("testDestination", testDestination),
+        ("testIntersection", testIntersection),
+        ("testCrossTrack", testCrossTrack),
+        ("testMaxLatitude", testMaxLatitude),
+        ("testCrossingParallels", testCrossingParallels)
+    ]
     
     private let cambridge = Coordinate(52.205, 0.119)
     private let paris = Coordinate(48.857, 2.351)
@@ -162,5 +160,15 @@ final class GeodesySphericalTest: XCTestCase {
 
         XCTAssertEqual(longitude1.rounded(to: 6), 9.594068)
         XCTAssertEqual(longitude2.rounded(to: 6), 170.405932)
+    }
+    
+    func testHashable() {
+        XCTAssertNotEqual(cambridge.hashValue, paris.hashValue)
+        XCTAssertEqual(cambridge.hashValue, cambridge.hashValue)
+    }
+    
+    func testCustomStringConvertible() {
+        XCTAssertEqual("\(cambridge)", "52.205,0.119")
+        XCTAssertEqual("\(paris)", "48.857,2.351")
     }
 }

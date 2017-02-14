@@ -56,8 +56,8 @@ extension Coordinate: Hashable {
     public var hashValue: Int {
         // DJB Hash Function
         var hash = 5381
-        hash = ((hash << 5) &+ hash) &+ self.latitude.hashValue.hashValue
-        hash = ((hash << 5) &+ hash) &+ self.longitude.hashValue.hashValue
+        hash = ((hash << 5) &+ hash) &+ self.latitude.hashValue
+        hash = ((hash << 5) &+ hash) &+ self.longitude.hashValue
         return hash
     }
 }

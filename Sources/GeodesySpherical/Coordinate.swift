@@ -10,18 +10,7 @@
     import Darwin
 #elseif os(Linux)
     import Glibc
-    private let DBL_EPSILON = 2.2204460492503131e-16
 #endif
-
-private extension Double {
-    func epsilonEqual(to other: Double, accuracy: Double = DBL_EPSILON) -> Bool {
-        return abs(self.distance(to: other)) <= accuracy
-    }
-    
-    func epsilonNotEqual(to other: Double, accuracy: Double = DBL_EPSILON) -> Bool {
-        return !self.epsilonEqual(to: other, accuracy: accuracy)
-    }
-}
 
 public typealias Degrees = Double
 public typealias Radians = Double
@@ -281,7 +270,10 @@ public extension Coordinate {
         let α1 = (θ13 - θ12 + Double.pi).truncatingRemainder(dividingBy: 2*Double.pi) - Double.pi // angle 2-1-3
         let α2 = (θ21 - θ23 + Double.pi).truncatingRemainder(dividingBy: 2*Double.pi) - Double.pi // angle 1-2-3
         
-        guard sin(α1).epsilonNotEqual(to: 0) || sin(α2).epsilonNotEqual(to: 0) else {
+        // This is actually testing for: sin(α1) != 0 || sin(α2) != 0
+        // However, due to the nature of floating point values sin(n * Double.pi) is not 0.
+        // Since we know that sin(x) is 0 whenever x is a multitude of π, we can truncate the remainder by Double.pi and get an accurate result.
+        guard α1.truncatingRemainder(dividingBy: Double.pi) != 0 || α2.truncatingRemainder(dividingBy: Double.pi) != 0 else {
             return nil // infinite intersections
         }
         guard sin(α1) * sin(α2) >= 0 else {

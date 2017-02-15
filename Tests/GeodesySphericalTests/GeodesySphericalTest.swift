@@ -104,36 +104,70 @@ final class GeodesySphericalTest: XCTestCase {
         let W = Degrees(270)
         
         // toward 1,1 N,E nearest
-        let intersection1 = Coordinate.intersection(of: (Coordinate(0, 1), N), with: (Coordinate(1, 0), E))!
-        XCTAssertEqual(intersection1.latitude.rounded(to: 6), 0.999848)
-        XCTAssertEqual(intersection1.longitude.rounded(to: 6), 1.000000)
+        do {
+            let intersection = Coordinate.intersection(of: (Coordinate(0, 1), N), with: (Coordinate(1, 0), E))!
+            XCTAssertEqual(intersection.latitude.rounded(to: 6), 0.999848)
+            XCTAssertEqual(intersection.longitude.rounded(to: 6), 1.000000)
+        }
         
         // toward 1,1 E,N nearest
-        let intersection2 = Coordinate.intersection(of: (Coordinate(1, 0), E), with: (Coordinate(0, 1), N))!
-        XCTAssertEqual(intersection2.latitude.rounded(to: 6), 0.999848)
-        XCTAssertEqual(intersection2.longitude.rounded(to: 6), 1.000000)
+        do {
+            let intersection = Coordinate.intersection(of: (Coordinate(1, 0), E), with: (Coordinate(0, 1), N))!
+            XCTAssertEqual(intersection.latitude.rounded(to: 6), 0.999848)
+            XCTAssertEqual(intersection.longitude.rounded(to: 6), 1.000000)
+        }
         
         // away 1,1 S,W antipodal
-        let intersection3 = Coordinate.intersection(of: (Coordinate(0, 1), S), with: (Coordinate(1, 0), W))!
-        XCTAssertEqual(intersection3.latitude.rounded(to: 6), -0.999848)
-        XCTAssertEqual(intersection3.longitude.rounded(to: 6), -179.000000)
-        
+        do {
+            let intersection = Coordinate.intersection(of: (Coordinate(0, 1), S), with: (Coordinate(1, 0), W))!
+            XCTAssertEqual(intersection.latitude.rounded(to: 6), -0.999848)
+            XCTAssertEqual(intersection.longitude.rounded(to: 6), -179.000000)
+        }
         // away 1,1 W,S antipodal
-        let intersection4 = Coordinate.intersection(of: (Coordinate(1, 0), W), with: (Coordinate(0, 1), S))!
-        XCTAssertEqual(intersection4.latitude.rounded(to: 6), -0.999848)
-        XCTAssertEqual(intersection4.longitude.rounded(to: 6), -179.000000)
+        do {
+            let intersection = Coordinate.intersection(of: (Coordinate(1, 0), W), with: (Coordinate(0, 1), S))!
+            XCTAssertEqual(intersection.latitude.rounded(to: 6), -0.999848)
+            XCTAssertEqual(intersection.longitude.rounded(to: 6), -179.000000)
+        }
         
         // 1E/90E N,E nearest
-        let intersection5 = Coordinate.intersection(of: (Coordinate(0, 1), N), with: (Coordinate(1, 92), E))!
-        XCTAssertEqual(intersection5.latitude.rounded(to: 6), 0.017454)
-        XCTAssertEqual(intersection5.longitude.rounded(to: 6), -179.000000)
+        do {
+            let intersection = Coordinate.intersection(of: (Coordinate(0, 1), N), with: (Coordinate(1, 92), E))!
+            XCTAssertEqual(intersection.latitude.rounded(to: 6), 0.017454)
+            XCTAssertEqual(intersection.longitude.rounded(to: 6), -179.000000)
+        }
         
         // stn-cdg-bxl
-        let stn = Coordinate(51.8853, 0.2545)
-        let cdg = Coordinate(49.0034, 2.5735)
-        let intersection6 = Coordinate.intersection(of: (stn, 108.547), with: (cdg, 32.435))!
-        XCTAssertEqual(intersection6.latitude.rounded(to: 6), 50.907809)
-        XCTAssertEqual(intersection6.longitude.rounded(to: 6), 4.508410)
+        do {
+            let stn = Coordinate(51.8853, 0.2545)
+            let cdg = Coordinate(49.0034, 2.5735)
+            let intersection = Coordinate.intersection(of: (stn, 108.547), with: (cdg, 32.435))!
+            XCTAssertEqual(intersection.latitude.rounded(to: 6), 50.907809)
+            XCTAssertEqual(intersection.longitude.rounded(to: 6), 4.508410)
+        }
+        
+        // Equal paths
+        do {
+            let coordinate = Coordinate(0, 0)
+            let intersection = Coordinate.intersection(of: (coordinate, N), with: (coordinate, N))
+            XCTAssertNil(intersection)
+        }
+        
+        // Infinite intersections
+        do {
+            let coordinate1 = Coordinate(0, 0)
+            let coordinate2 = Coordinate(0, 1)
+            let intersection = Coordinate.intersection(of: (coordinate1, E), with: (coordinate2, E))
+            XCTAssertNil(intersection)
+        }
+        
+        // Ambiguous intersections
+        do {
+            let coordinate1 = Coordinate(0, 0)
+            let coordinate2 = Coordinate(1, 0)
+            let intersection = Coordinate.intersection(of: (coordinate1, N), with: (coordinate2, N))
+            XCTAssertNil(intersection)
+        }
     }
     
     func testCrossTrack() {

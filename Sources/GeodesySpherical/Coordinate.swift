@@ -10,6 +10,7 @@
     import Darwin
 #elseif os(Linux)
     import Glibc
+    private let DBL_EPSILON = 2.2204460492503131e-16
 #endif
 
 private extension Double {

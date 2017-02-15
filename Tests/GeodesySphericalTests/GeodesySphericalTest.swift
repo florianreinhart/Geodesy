@@ -168,6 +168,13 @@ final class GeodesySphericalTest: XCTestCase {
             let intersection = Coordinate.intersection(of: (coordinate1, N), with: (coordinate2, N))
             XCTAssertNil(intersection)
         }
+        
+        // NaN
+        do {
+            let coordinate = Coordinate(Double.nan, 0)
+            let intersection = Coordinate.intersection(of: (coordinate, N), with: (coordinate, N))
+            XCTAssertNil(intersection)
+        }
     }
     
     func testCrossTrack() {
@@ -190,10 +197,17 @@ final class GeodesySphericalTest: XCTestCase {
     }
     
     func testCrossingParallels() {
-        let (longitude1, longitude2) = Coordinate.crossingParallels(coordinate1: Coordinate(0, 0), coordinate2: Coordinate(60, 30), latitude: 30)!
-
-        XCTAssertEqual(longitude1.rounded(to: 6), 9.594068)
-        XCTAssertEqual(longitude2.rounded(to: 6), 170.405932)
+        do {
+            let longitudes = Coordinate.crossingParallels(coordinate1: Coordinate(0, 0), coordinate2: Coordinate(60, 30), latitude: 30)
+            XCTAssertNotNil(longitudes)
+            XCTAssertEqual(longitudes?.longitude1.rounded(to: 6), 9.594068)
+            XCTAssertEqual(longitudes?.longitude2.rounded(to: 6), 170.405932)
+        }
+        
+        do {
+            let longitudes = Coordinate.crossingParallels(coordinate1: Coordinate(0, 0), coordinate2: Coordinate(0, 1), latitude: 30)
+            XCTAssertNil(longitudes)
+        }
     }
     
     func testHashable() {

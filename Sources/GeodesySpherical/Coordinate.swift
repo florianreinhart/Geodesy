@@ -12,6 +12,16 @@
     import Glibc
 #endif
 
+private extension Double {
+    func epsilonEqual(to other: Double, accuracy: Double = DBL_EPSILON) -> Bool {
+        return abs(self.distance(to: other)) <= accuracy
+    }
+    
+    func epsilonNotEqual(to other: Double, accuracy: Double = DBL_EPSILON) -> Bool {
+        return !self.epsilonEqual(to: other, accuracy: accuracy)
+    }
+}
+
 public typealias Degrees = Double
 public typealias Radians = Double
 public typealias Distance = Double
@@ -84,9 +94,7 @@ public extension Coordinate {
         let Δφ = φ2 - φ1
         let Δλ = λ2 - λ1
         
-        let a = sin(Δφ/2) * sin(Δφ/2)
-            + cos(φ1) * cos(φ2)
-            * sin(Δλ/2) * sin(Δλ/2)
+        let a = sin(Δφ/2) * sin(Δφ/2) + cos(φ1) * cos(φ2) * sin(Δλ/2) * sin(Δλ/2)
         let c = 2 * atan2(sqrt(a), sqrt(1-a))
         let d = Coordinate.earthRadius * c
         
@@ -272,11 +280,11 @@ public extension Coordinate {
         let α1 = (θ13 - θ12 + Double.pi).truncatingRemainder(dividingBy: 2*Double.pi) - Double.pi // angle 2-1-3
         let α2 = (θ21 - θ23 + Double.pi).truncatingRemainder(dividingBy: 2*Double.pi) - Double.pi // angle 1-2-3
         
-        if sin(α1)==0 && sin(α2)==0 {
+        guard sin(α1).epsilonNotEqual(to: 0) || sin(α2).epsilonNotEqual(to: 0) else {
             return nil // infinite intersections
         }
-        if sin(α1)*sin(α2) < 0 {
-            return nil      // ambiguous intersection
+        guard sin(α1) * sin(α2) >= 0 else {
+            return nil // ambiguous intersection
         }
         
         //α1 = abs(α1)
@@ -354,7 +362,7 @@ public extension Coordinate {
         let y = sin(φ1) * cos(φ2) * cos(φ) * cos(Δλ) - cos(φ1) * sin(φ2) * cos(φ)
         let z = cos(φ1) * cos(φ2) * sin(φ) * sin(Δλ)
         
-        if z*z > x*x + y*y {
+        guard z*z <= x*x + y*y else {
             return nil // great circle doesn't reach latitude
         }
         

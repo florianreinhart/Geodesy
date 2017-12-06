@@ -6,7 +6,7 @@ let package = Package(
     name: "Geodesy",
     products: [
         .library(
-            name: "Geodesy",
+            name: "GeodesySpherical",
             targets: ["GeodesySpherical"]),
     ],
     dependencies: [

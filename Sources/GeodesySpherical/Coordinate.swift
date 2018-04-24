@@ -18,13 +18,13 @@ public typealias Distance = Double
 
 
 public extension Degrees {
-    init(radians: Radians) {
+    public init(radians: Radians) {
         self = radians * 180 / Double.pi
     }
 }
 
 public extension Radians {
-    init(degrees: Degrees) {
+    public init(degrees: Degrees) {
         self = degrees * Double.pi / 180
     }
 }

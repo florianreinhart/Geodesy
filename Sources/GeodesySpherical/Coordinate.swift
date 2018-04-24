@@ -42,7 +42,7 @@ public struct Coordinate {
     }
     
     public init(_ latitude: Degrees, _ longitude: Degrees) {
-        self = Coordinate(latitude: latitude, longitude: longitude)
+        self.init(latitude: latitude, longitude: longitude)
     }
 }
 
@@ -65,6 +65,19 @@ extension Coordinate: Hashable {
 extension Coordinate: CustomStringConvertible {
     public var description: String {
         return "\(self.latitude),\(self.longitude)"
+    }
+}
+
+extension Coordinate: LosslessStringConvertible {
+    public init?(_ description: String) {
+        let components = description.split(separator: ",")
+        guard components.count == 2,
+            let latitude = Degrees(components[0]),
+            let longitude = Degrees(components[1]) else {
+                return nil
+        }
+        
+        self.init(latitude: latitude, longitude: longitude)
     }
 }
 

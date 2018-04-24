@@ -219,4 +219,16 @@ final class GeodesySphericalTest: XCTestCase {
         XCTAssertEqual("\(cambridge)", "52.205,0.119")
         XCTAssertEqual("\(paris)", "48.857,2.351")
     }
+    
+    func testLosslessStringConvertible() {
+        XCTAssertEqual(Coordinate("\(cambridge)"), cambridge)
+        XCTAssertEqual(Coordinate("\(paris)"), paris)
+        XCTAssertEqual(Coordinate("52.205,0.119"), cambridge)
+        XCTAssertEqual(Coordinate("48.857,2.351"), paris)
+        XCTAssertNil(Coordinate("INVALID_STRING"))
+        XCTAssertNil(Coordinate("42"))
+        XCTAssertNil(Coordinate("42,"))
+        XCTAssertNil(Coordinate(",42"))
+        XCTAssertNil(Coordinate("1,2,3"))
+    }
 }

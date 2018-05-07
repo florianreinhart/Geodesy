@@ -24,6 +24,10 @@ private extension Double {
 final class GeodesySphericalTest: XCTestCase {
     
     static let allTests = [
+        ("testSign", testSign),
+        ("testHashable", testHashable),
+        ("testCustomStringConvertible", testCustomStringConvertible),
+        ("testLosslessStringConvertible", testLosslessStringConvertible),
         ("testDistance", testDistance),
         ("testInitialBearing", testInitialBearing),
         ("testFinalBearing", testFinalBearing),
@@ -32,8 +36,13 @@ final class GeodesySphericalTest: XCTestCase {
         ("testDestination", testDestination),
         ("testIntersection", testIntersection),
         ("testCrossTrack", testCrossTrack),
+        ("testAlongTrackDistance", testAlongTrackDistance),
         ("testMaxLatitude", testMaxLatitude),
-        ("testCrossingParallels", testCrossingParallels)
+        ("testCrossingParallels", testCrossingParallels),
+        ("testRhumbDistance", testRhumbDistance),
+        ("testRhumbBearing", testRhumbBearing),
+        ("testRhumbDestination", testRhumbDestination),
+        ("testRhumbMidpoint", testRhumbMidpoint),
     ]
     
     private let cambridge = Coordinate(52.205, 0.119)

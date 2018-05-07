@@ -368,7 +368,7 @@ public extension Coordinate {
         let δat = acos(cos(δ13) / abs(cos(δxt)))
         
         return δat * cos(θ12 - θ13).sign * R
-    };
+    }
     
     /**
      Calculates the maximum latitude reached when travelling on a great circle on given bearing ('Clairaut's formula').
@@ -559,5 +559,75 @@ public extension Coordinate {
         let p = Coordinate(Degrees(radians: φ3), (Degrees(radians: λ3) + 540).truncatingRemainder(dividingBy: 360) - 180) // normalise to −180..+180°
         
         return p
+    }
+}
+
+// MARK: - Area
+
+public extension Coordinate {
+    
+    /**
+     Calculates the area of a spherical polygon where the sides of the polygon are great circle
+     arcs joining the vertices.
+     
+     - Parameter polygon: Array of coordinates defining vertices of the polygon.
+     
+     - Returns: The area of the polygon.
+     */
+    public static func area(of polygon: [Coordinate]) -> Double? {
+        guard polygon.count >= 3 else {
+            return nil
+        }
+        
+        // uses method due to Karney: http://osgeo-org.1560.x6.nabble.com/Area-of-a-spherical-polygon-td3841625.html
+        // for each edge of the polygon, tan(E/2) = tan(Δλ/2)·(tan(φ1/2) + tan(φ2/2)) / (1 + tan(φ1/2)·tan(φ2/2))
+        // where E is the spherical excess of the trapezium obtained by extending the edge to the equator
+        
+        let R = Coordinate.earthRadius
+        
+        // close polygon so that last point equals first point
+        var polygon = polygon
+        if polygon.first! != polygon.last! {
+            polygon.append(polygon.first!)
+        }
+        
+        var nVertices = polygon.count - 1
+        
+        var S: Double = 0 // spherical excess in steradians
+        for v in 0 ..< nVertices  {
+            var φ1 = Radians(degrees: polygon[v].latitude)
+            var φ2 = Radians(degrees: polygon[v + 1].latitude)
+            var Δλ = Radians(degrees: polygon[v + 1].longitude - polygon[v].longitude)
+            var E = 2 * atan2(tan(Δλ / 2) * (tan(φ1 / 2) + tan(φ2 / 2)), 1 + tan(φ1 / 2) * tan(φ2 / 2))
+            S += E
+        }
+        
+        // returns whether polygon encloses pole: sum of course deltas around pole is 0° rather than
+        // normal ±360°: blog.element84.com/determining-if-a-spherical-polygon-contains-a-pole.html
+        func isPoleEnclosed(by polygon: [Coordinate]) -> Bool {
+            // TODO: any better test than this?
+            var ΣΔ: Double = 0
+            var prevBrng = polygon[0].bearing(to: polygon[1])
+            for v in 0 ..< polygon.count - 1 {
+                let initBrng = polygon[v].bearing(to: polygon[v+1])
+                let finalBrng = polygon[v].finalBearing(to: polygon[v+1])
+                ΣΔ += (initBrng - prevBrng + 540).truncatingRemainder(dividingBy: 360) - 180
+                ΣΔ += (finalBrng - initBrng + 540).truncatingRemainder(dividingBy: 360) - 180
+                prevBrng = finalBrng
+            }
+            let initBrng = polygon[0].bearing(to: polygon[1])
+            ΣΔ += (initBrng - prevBrng + 540).truncatingRemainder(dividingBy: 360) - 180
+            // TODO: fix (intermittant) edge crossing pole - eg (85,90), (85,0), (85,-90)
+            let enclosed = abs(ΣΔ) < 90 // 0°-ish
+            return enclosed
+        }
+        
+        if isPoleEnclosed(by: polygon) {
+            S = abs(S) - 2 * Double.pi
+        }
+        
+        let A = abs(S * R * R) // area in units of R
+        
+        return A
     }
 }

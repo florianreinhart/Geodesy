@@ -43,6 +43,7 @@ final class GeodesySphericalTest: XCTestCase {
         ("testRhumbBearing", testRhumbBearing),
         ("testRhumbDestination", testRhumbDestination),
         ("testRhumbMidpoint", testRhumbMidpoint),
+        ("testArea", testArea),
     ]
     
     private let cambridge = Coordinate(52.205, 0.119)
@@ -372,6 +373,66 @@ final class GeodesySphericalTest: XCTestCase {
             let midpoint = Coordinate(1, -179).rhumbMidpoint(to: Coordinate(1, 178))
             XCTAssertEqual(midpoint.latitude.rounded(to: 6), 1)
             XCTAssertEqual(midpoint.longitude.rounded(to: 6), 179.5)
+        }
+    }
+    
+    func testArea() {
+        let R = 6371e3
+        let π = Double.pi
+        let polyTriangle  = [Coordinate(1, 1), Coordinate(2, 1), Coordinate(1, 2)]
+        let polySquareCw  = [Coordinate(1, 1), Coordinate(2, 1), Coordinate(2, 2), Coordinate(1, 2)]
+        let polySquareCcw = [Coordinate(1, 1), Coordinate(1, 2), Coordinate(2, 2), Coordinate(2, 1)]
+        let polyQuadrant  = [Coordinate(0, 0), Coordinate(0, 90), Coordinate(90, 0)]
+        let polyHemi      = [Coordinate(0, 1), Coordinate(45, 0), Coordinate(89, 90), Coordinate(45, 180), Coordinate(0, 179), Coordinate(-45, 180), Coordinate(-89, 90), Coordinate(-45, 0)]
+        let polyPole      = [Coordinate(89, 0), Coordinate(89, 120), Coordinate(89, -120)]
+        let polyConcave   = [Coordinate(1, 1), Coordinate(5, 1), Coordinate(5, 3), Coordinate(1, 3), Coordinate(3, 2)]
+        
+        // test('triangle area',        function() { LatLon.areaOf(polyTriangle).toFixed(0).should.equal('6181527888'); });
+        do {
+            let area = Coordinate.area(of: polyTriangle)!
+            XCTAssertEqual(area.rounded(to: 0), 6181527888)
+        }
+
+        // ('triangle area closed', function() { LatLon.areaOf(polyTriangle.concat(polyTriangle[0])).toFixed(0).should.equal('6181527888'); });
+        do {
+            let area = Coordinate.area(of: polyTriangle + [polyTriangle[0]])!
+            XCTAssertEqual(area.rounded(to: 0), 6181527888)
+        }
+
+        // test('square cw area',       function() { LatLon.areaOf(polySquareCw).toFixed(0).should.equal('12360230987'); });
+        do {
+            let area = Coordinate.area(of: polySquareCw)!
+            XCTAssertEqual(area.rounded(to: 0), 12360230987)
+        }
+
+        // test('square ccw area',      function() { LatLon.areaOf(polySquareCcw).toFixed(0).should.equal('12360230987'); });
+        do {
+            let area = Coordinate.area(of: polySquareCcw)!
+            XCTAssertEqual(area.rounded(to: 0), 12360230987)
+        }
+
+        // test('quadrant area',        function() { LatLon.areaOf(polyQuadrant).toFixed(1).should.equal((π*R*R/2).toFixed(1)); });
+        do {
+            let area = Coordinate.area(of: polyQuadrant)!
+            XCTAssertEqual(area.rounded(to: 1), (π * R * R / 2).rounded(to: 1))
+        }
+
+        // test('hemisphere area',      function() { LatLon.areaOf(polyHemi).toFixed(0).should.equal('252684679676459'); }); // TODO: vectors gives 252198975941606 (0.2% error) - which is right?
+        do {
+            let area = Coordinate.area(of: polyHemi)!
+            XCTAssertEqual(area.rounded(to: 0), 252684679676459)
+        }
+
+        // test('pole area',            function() { LatLon.areaOf(polyPole).toFixed(0).should.equal('16063139192'); });
+        do {
+            let area = Coordinate.area(of: polyPole)!
+            XCTAssertEqual(area.rounded(to: 0), 16063139192)
+        }
+        
+        // test('concave area',         function() { LatLon.areaOf(polyConcave).toFixed(0).should.equal('74042699236'); });
+        do {
+            let area = Coordinate.area(of: polyConcave)!
+            XCTAssertEqual(area.rounded(to: 0), 74042699236)
         }
     }
 }

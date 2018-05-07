@@ -11,4 +11,4 @@ This is a port of the excellent [JavaScript geodesy module by Chris Veness](http
 
 ## Implementation Status
 
-Only parts of the spherical functions are currently implemented.
+All spherical functions are implemented and tested.

@@ -16,6 +16,17 @@ public typealias Degrees = Double
 public typealias Radians = Double
 public typealias Distance = Double
 
+internal extension Double {
+    internal var sign:  Double {
+        if self < 0 {
+            return -1
+        } else if self == 0 {
+            return 0
+        } else {
+             return 1
+        }
+    }
+}
 
 public extension Degrees {
     public init(radians: Radians) {
@@ -89,7 +100,12 @@ public extension Coordinate {
      
      - Returns: The distance from this coordinate to the destination in meters
      */
-    public func distance(to coordinate: Coordinate) -> Double {
+    public func distance(to coordinate: Coordinate) -> Distance {
+        // a = sin²(Δφ/2) + cos(φ1)⋅cos(φ2)⋅sin²(Δλ/2)
+        // tanδ = √(a) / √(1−a)
+        // see http://mathforum.org/library/drmath/view/51879.html for derivation
+        
+        let R = Coordinate.earthRadius
         let φ1 = Radians(degrees: self.latitude)
         let λ1 = Radians(degrees: self.longitude)
         let φ2 = Radians(degrees: coordinate.latitude)
@@ -97,9 +113,11 @@ public extension Coordinate {
         let Δφ = φ2 - φ1
         let Δλ = λ2 - λ1
         
-        let a = sin(Δφ/2) * sin(Δφ/2) + cos(φ1) * cos(φ2) * sin(Δλ/2) * sin(Δλ/2)
-        let c = 2 * atan2(sqrt(a), sqrt(1-a))
-        let d = Coordinate.earthRadius * c
+        let a = sin(Δφ/2) * sin(Δφ/2)
+            + cos(φ1) * cos(φ2)
+            * sin(Δλ/2) * sin(Δλ/2)
+        let c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        let d = R * c
         
         return d
     }
@@ -107,21 +125,24 @@ public extension Coordinate {
     /**
      Calculates the (initial) bearing to a destination.
      
-     - Parameter to: The destination coordinate.
+     - Parameter coordinate: The destination coordinate.
      
      - Returns: The *initial* bearing to the destination in degrees from north.
      */
-    public func bearing(to coordinate: Coordinate) -> Double {
+    public func bearing(to coordinate: Coordinate) -> Degrees {
+        // tanθ = sinΔλ⋅cosφ2 / cosφ1⋅sinφ2 − sinφ1⋅cosφ2⋅cosΔλ
+        // see http://mathforum.org/library/drmath/view/55417.html for derivation
+        
         let φ1 = Radians(degrees: self.latitude)
         let φ2 = Radians(degrees: coordinate.latitude)
         let Δλ = Radians(degrees: coordinate.longitude - self.longitude)
         
-        // see http://mathforum.org/library/drmath/view/55417.html
         let y = sin(Δλ) * cos(φ2)
-        let x = cos(φ1)*sin(φ2) - sin(φ1)*cos(φ2)*cos(Δλ)
+        let x = cos(φ1)*sin(φ2)
+            - sin(φ1) * cos(φ2) * cos(Δλ)
         let θ = atan2(y, x)
         
-        return (Degrees(radians: θ)+360).truncatingRemainder(dividingBy: 360)
+        return (Degrees(radians: θ) + 360).truncatingRemainder(dividingBy: 360)
     }
 
 
@@ -129,11 +150,11 @@ public extension Coordinate {
      Calculates the final bearing arriving at a destination.
      The final bearing will differ from the initial bearing by varying degrees according to distance and latitude.
      
-     - Parameter to: The destination coordinate.
+     - Parameter coordinate: The destination coordinate.
      
      - Returns: The *final* bearing to the destination in degrees from north.
      */
-    public func finalBearing(to coordinate: Coordinate) -> Double {
+    public func finalBearing(to coordinate: Coordinate) -> Degrees {
         // get initial bearing from destination point to this point & reverse it by adding 180°
         return (coordinate.bearing(to: self) + 180).truncatingRemainder(dividingBy: 360)
     }
@@ -141,7 +162,7 @@ public extension Coordinate {
     /**
      Calculates the midpoint between *this* coordinate and the given coordinate.
      
-     - Parameter to: The destination coordinate.
+     - Parameter coordinate: The destination coordinate.
      
      - Returns: The midpoint between this coordinate and the given coordinate.
      */
@@ -314,15 +335,40 @@ public extension Coordinate {
      
      - Returns: The distance to the great circle (-ve if to left, +ve if to right of path).
      */
-    public func crossTrackDistanceToPath(from pathStart: Coordinate, to pathEnd: Coordinate) -> Distance {
-        let δ13 = pathStart.distance(to: self) / Coordinate.earthRadius
-        let θ13 = Radians(degrees: pathStart.bearing(to: self))
-        let θ12 = Radians(degrees: pathStart.bearing(to: pathEnd))
+    public func crossTrackDistance(toPath path:(start: Coordinate, end: Coordinate)) -> Distance {
+        let δ13 = path.start.distance(to: self) / Coordinate.earthRadius
+        let θ13 = Radians(degrees: path.start.bearing(to: self))
+        let θ12 = Radians(degrees: path.start.bearing(to: path.end))
         
         let δ = asin( sin(δ13) * sin(θ13-θ12) )
         
         return δ * Coordinate.earthRadius
     }
+    
+    /**
+     Calculate how far ‘this’ point is along a path from from start-point, heading towards end-point.
+     That is, if a perpendicular is drawn from ‘this’ point to the (great circle) path, the along-track
+     distance is the distance from the start point to where the perpendicular crosses the path.
+     
+     - Parameter toPath: Great circle path defined by start and end coordinate.
+     
+     - Returns: The distance along the path.
+     */
+    public func alongTrackDistance(toPath path: (start: Coordinate, end: Coordinate)) -> Distance {
+        let R = Coordinate.earthRadius
+        
+        print("start: \(path.start)")
+        print("end: \(path.end)")
+        let δ13 = path.start.distance(to: self) / R
+        let θ13 = Radians(degrees: path.start.bearing(to: self))
+        let θ12 = Radians(degrees: path.start.bearing(to: path.end))
+        
+        let δxt = asin(sin(δ13) * sin(θ13 - θ12))
+        
+        let δat = acos(cos(δ13) / abs(cos(δxt)))
+        
+        return δat * cos(θ12 - θ13).sign * R
+    };
     
     /**
      Calculates the maximum latitude reached when travelling on a great circle on given bearing ('Clairaut's formula').
@@ -380,5 +426,138 @@ public extension Coordinate {
         
         return (longitude1: (Degrees(radians: λi1) + 540).truncatingRemainder(dividingBy: 360) - 180, // normalise to −180..+180°
                 longitude2: (Degrees(radians:λi2) + 540).truncatingRemainder(dividingBy: 360) - 180) // normalise to −180..+180°
+    }
+}
+
+
+
+// MARK: - Rhumb
+
+public extension Coordinate {
+    
+    /**
+     Calculates the distance to a destination coordinate along a rhumb line.
+     
+     - Parameter coordinate: The destination coordinate
+     
+     - Returns: The distance from this coordinate to the destination along a rhumb line
+     */
+    public func rhumbDistance(to coordinate: Coordinate) -> Distance {
+        // see www.edwilliams.org/avform.htm#Rhumb
+        
+        let R = Coordinate.earthRadius
+        let φ1 = Radians(degrees: self.latitude)
+        let φ2 = Radians(degrees: coordinate.latitude)
+        let Δφ = φ2 - φ1
+        var Δλ = Radians(degrees: abs(coordinate.longitude - self.longitude))
+        // if dLon over 180° take shorter rhumb line across the anti-meridian:
+        if Δλ > Double.pi {
+            Δλ -= 2 * Double.pi
+        }
+        
+        // on Mercator projection, longitude distances shrink by latitude; q is the 'stretch factor'
+        // q becomes ill-conditioned along E-W line (0/0); use empirical tolerance to avoid it
+        let Δψ = log(tan(φ2 / 2 + Double.pi / 4) / tan(φ1 / 2 + Double.pi / 4))
+        let q = abs(Δψ) > 10e-12 ? Δφ / Δψ : cos(φ1)
+        
+        // distance is pythagoras on 'stretched' Mercator projection
+        let δ = sqrt((Δφ * Δφ) + (q * q * Δλ * Δλ)) // angular distance in radians
+        let dist = δ * R
+        
+        return dist
+    }
+    
+    /**
+     Calculates the bearing to a destination along a rhumb line.
+     
+     - Parameter coordinate: The destination coordinate.
+     
+     - Returns: The bearing to the destination along a rhumb line in degrees from north.
+     */
+    public func rhumbBearing(to coordinate: Coordinate) -> Degrees {
+        let φ1 = Radians(degrees: self.latitude)
+        let φ2 = Radians(degrees: coordinate.latitude)
+        var Δλ = Radians(degrees: coordinate.longitude - self.longitude)
+        // if dLon over 180° take shorter rhumb line across the anti-meridian:
+        if Δλ > Double.pi {
+            Δλ -= 2 * Double.pi
+        }
+        if Δλ < -Double.pi {
+            Δλ += 2 * Double.pi
+        }
+        
+        let Δψ = log(tan(φ2 / 2 + Double.pi / 4) / tan(φ1 / 2 + Double.pi / 4))
+        
+        let θ = atan2(Δλ, Δψ)
+        
+        return (Degrees(radians: θ) + 360).truncatingRemainder(dividingBy: 360)
+    }
+    
+    /**
+     Calculates the destination coordinate from *this* coordinate having travelled along a rhumb line
+     the given distance on the given bearing.
+     
+     - Parameter distance Distance to travel in meters
+     - Parameter bearing: The bearing in degrees from north
+     
+     - Returns: The destination coordinate
+     */
+    public func rhumbDestination(with distance: Distance, bearing: Degrees) -> Coordinate {
+        let radius = Coordinate.earthRadius
+        
+        let δ = distance / radius // angular distance in radians
+        let φ1 = Radians(degrees: self.latitude)
+        let λ1 = Radians(degrees: self.longitude)
+        let θ = Radians(degrees: bearing)
+        
+        let Δφ = δ * cos(θ)
+        var φ2 = φ1 + Δφ
+        
+        // check for some daft bugger going past the pole, normalise latitude if so
+        if abs(φ2) > Double.pi / 2 {
+            φ2 = φ2 > 0 ? Double.pi - φ2 : -Double.pi - φ2
+        }
+        
+        let Δψ = log(tan(φ2 / 2 + Double.pi / 4) / tan(φ1 / 2 + Double.pi / 4))
+        let q = abs(Δψ) > 10e-12 ? Δφ / Δψ : cos(φ1) // E-W course becomes ill-conditioned with 0/0
+        
+        let Δλ = δ * sin(θ) / q
+        let λ2 = λ1 + Δλ
+        
+        return Coordinate(Degrees(radians: φ2), (Degrees(radians: λ2) + 540).truncatingRemainder(dividingBy: 360) - 180) // normalise to −180..+180°
+    }
+    
+    /**
+     Calculates the loxodromic midpoint (along a rhumb line) between *this* coordinate and the given coordinate.
+     
+     - Parameter coordinate: The destination coordinate.
+     
+     - Returns: The midpoint between this coordinate and the given coordinate.
+     */
+    public func rhumbMidpoint(to coordinate: Coordinate) -> Coordinate {
+        // see http://mathforum.org/kb/message.jspa?messageID=148837
+        
+        let φ1 = Radians(degrees: self.latitude)
+        var λ1 = Radians(degrees: self.longitude)
+        let φ2 = Radians(degrees: coordinate.latitude)
+        let λ2 = Radians(degrees: coordinate.longitude)
+        
+        if abs(λ2 - λ1) > Double.pi {
+            λ1 += 2 * Double.pi // crossing anti-meridian
+        }
+        
+        let φ3 = (φ1 + φ2) / 2
+        let f1 = tan(Double.pi / 4 + φ1 / 2)
+        let f2 = tan(Double.pi / 4 + φ2 / 2)
+        let f3 = tan(Double.pi / 4 + φ3 / 2)
+        var λ3 = ((λ2 - λ1) * log(f3) + λ1 * log(f2) - λ2 * log(f1)) / log(f2 / f1)
+        
+        if !λ3.isFinite {
+            λ3 = (λ1 + λ2) / 2 // parallel of latitude
+        }
+        
+        let p = Coordinate(Degrees(radians: φ3), (Degrees(radians: λ3) + 540).truncatingRemainder(dividingBy: 360) - 180) // normalise to −180..+180°
+        
+        return p
     }
 }

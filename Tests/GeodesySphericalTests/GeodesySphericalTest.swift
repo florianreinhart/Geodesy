@@ -14,7 +14,7 @@
 import XCTest
 @testable import GeodesySpherical
 
-extension Double {
+private extension Double {
     func rounded(to places: Int) -> Double {
         let factor = pow(10.0, Double(places))
         return (self * factor).rounded() / factor
@@ -38,6 +38,38 @@ final class GeodesySphericalTest: XCTestCase {
     
     private let cambridge = Coordinate(52.205, 0.119)
     private let paris = Coordinate(48.857, 2.351)
+    private let greenwich = Coordinate(51.4778, -0.0015)
+    private let bradwell = Coordinate(53.3206, -1.7297)
+    private let dov = Coordinate(51.127, 1.338)
+    private let cal = Coordinate(50.964, 1.853)
+    
+    func testSign() {
+        XCTAssertEqual(-10.sign, -1)
+        XCTAssertEqual(0.sign, 0)
+        XCTAssertEqual(10.sign, 1)
+    }
+    
+    func testHashable() {
+        XCTAssertNotEqual(cambridge.hashValue, paris.hashValue)
+        XCTAssertEqual(cambridge.hashValue, cambridge.hashValue)
+    }
+    
+    func testCustomStringConvertible() {
+        XCTAssertEqual("\(cambridge)", "52.205,0.119")
+        XCTAssertEqual("\(paris)", "48.857,2.351")
+    }
+    
+    func testLosslessStringConvertible() {
+        XCTAssertEqual(Coordinate("\(cambridge)"), cambridge)
+        XCTAssertEqual(Coordinate("\(paris)"), paris)
+        XCTAssertEqual(Coordinate("52.205,0.119"), cambridge)
+        XCTAssertEqual(Coordinate("48.857,2.351"), paris)
+        XCTAssertNil(Coordinate("INVALID_STRING"))
+        XCTAssertNil(Coordinate("42"))
+        XCTAssertNil(Coordinate("42,"))
+        XCTAssertNil(Coordinate(",42"))
+        XCTAssertNil(Coordinate("1,2,3"))
+    }
     
     func testDistance() {
         let cambridgeToParis = cambridge.distance(to: paris)
@@ -87,7 +119,7 @@ final class GeodesySphericalTest: XCTestCase {
     }
     
     func testDestination() {
-        let greenwich = Coordinate(51.4778, -0.0015)
+        
         let distance = Distance(7794)
         let bearing = Degrees(300.7)
         
@@ -178,12 +210,50 @@ final class GeodesySphericalTest: XCTestCase {
     }
     
     func testCrossTrack() {
-        let bradwell = Coordinate(53.3206, -1.7297)
-        let distance1 = Coordinate(53.2611, -0.7972).crossTrackDistanceToPath(from: bradwell, to: Coordinate(53.1887, 0.1334))
-        let distance2 = Coordinate(10, 1).crossTrackDistanceToPath(from: Coordinate(0, 0), to: Coordinate(0, 2))
-        
+        // test('cross-track',      function() { new LatLon(53.2611, -0.7972).crossTrackDistanceTo(bradwell, new LatLon(53.1887,  0.1334)).toPrecision(4).should.equal('-307.5'); });
+        let distance1 = Coordinate(53.2611, -0.7972).crossTrackDistance(toPath: (start: bradwell, end: Coordinate(53.1887, 0.1334)))
         XCTAssertEqual(distance1.rounded(to: 1), -307.5)
+        
+        let distance2 = Coordinate(10, 1).crossTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
         XCTAssertEqual(distance2.rounded(to: 1), -1111949.3)
+        
+        // test('cross-track NE',   function() { LatLon( 1,  1).crossTrackDistanceTo(LatLon(0, 0), LatLon(0, 2)).toPrecision(4).should.equal('-1.112e+5'); });
+        let distanceNE = Coordinate(1, 1).crossTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
+        XCTAssertEqual(distanceNE.rounded(to: 1), -111194.9)
+        
+        // test('cross-track SE',   function() { LatLon(-1,  1).crossTrackDistanceTo(LatLon(0, 0), LatLon(0, 2)).toPrecision(4).should.equal('1.112e+5'); });
+        let distanceSE = Coordinate(-1, 1).crossTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
+        XCTAssertEqual(distanceSE.rounded(to: 1), 111194.9)
+        
+        // test('cross-track SW?',  function() { LatLon(-1, -1).crossTrackDistanceTo(LatLon(0, 0), LatLon(0, 2)).toPrecision(4).should.equal('1.112e+5'); });
+        let distanceSW = Coordinate(-1, -1).crossTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
+        XCTAssertEqual(distanceSW.rounded(to: 1), 111194.9)
+        
+        // test('cross-track NW?',  function() { LatLon( 1, -1).crossTrackDistanceTo(LatLon(0, 0), LatLon(0, 2)).toPrecision(4).should.equal('-1.112e+5'); });
+        let distanceNW = Coordinate(1, -1).crossTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
+        XCTAssertEqual(distanceNW.rounded(to: 1), -111194.9)
+    }
+    
+    func testAlongTrackDistance() {
+        // test('along-track',      function() { new LatLon(53.2611, -0.7972).alongTrackDistanceTo(bradwell, new LatLon(53.1887,  0.1334)).toPrecision(4).should.equal('6.233e+4'); });
+        let distance1 = Coordinate(53.2611, -0.7972).alongTrackDistance(toPath: (start: bradwell, end: Coordinate(53.1887,  0.1334)))
+        XCTAssertEqual(distance1.rounded(to: 0), 62331)
+
+        // test('along-track NE',   function() { LatLon( 1,  1).alongTrackDistanceTo(LatLon(0, 0), LatLon(0, 2)).toPrecision(4).should.equal('1.112e+5'); });
+        let distanceNE = Coordinate(1, 1).alongTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
+        XCTAssertEqual(distanceNE.rounded(to: 0), 111195)
+
+        // test('along-track SE',   function() { LatLon(-1,  1).alongTrackDistanceTo(LatLon(0, 0), LatLon(0, 2)).toPrecision(4).should.equal('1.112e+5'); });
+        let distanceSE = Coordinate(-1, 1).alongTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
+        XCTAssertEqual(distanceSE.rounded(to: 0), 111195)
+        
+        // test('along-track SW',   function() { LatLon(-1, -1).alongTrackDistanceTo(LatLon(0, 0), LatLon(0, 2)).toPrecision(4).should.equal('-1.112e+5'); });
+        let distanceSW = Coordinate(-1, -1).alongTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
+        XCTAssertEqual(distanceSW.rounded(to: 0), -111195)
+        
+        // test('along-track NW',   function() { LatLon( 1, -1).alongTrackDistanceTo(LatLon(0, 0), LatLon(0, 2)).toPrecision(4).should.equal('-1.112e+5'); });
+        let distanceNW = Coordinate(1, -1).alongTrackDistance(toPath: (start: Coordinate(0, 0), end: Coordinate(0, 2)))
+        XCTAssertEqual(distanceNW.rounded(to: 0), -111195)
     }
     
     func testMaxLatitude() {
@@ -210,25 +280,89 @@ final class GeodesySphericalTest: XCTestCase {
         }
     }
     
-    func testHashable() {
-        XCTAssertNotEqual(cambridge.hashValue, paris.hashValue)
-        XCTAssertEqual(cambridge.hashValue, cambridge.hashValue)
+    func testRhumbDistance() {
+        // test('distance',              function() { dov.rhumbDistanceTo(cal).toPrecision(4).should.equal('4.031e+4'); });
+        do {
+            let distance = dov.rhumbDistance(to: cal)
+            XCTAssertEqual(distance.rounded(to: 0), 40308)
+        }
+        
+        // test('distance dateline E-W', function() { new LatLon(1, -179).rhumbDistanceTo(new LatLon(1, 179)).toFixed(6).should.equal(new LatLon(1, 1).rhumbDistanceTo(new LatLon(1, -1)).toFixed(6)); });
+        do {
+            let distance1 = Coordinate(1, -179).rhumbDistance(to: Coordinate(1, 179))
+            let distance2 = Coordinate(1, 1).rhumbDistance(to: Coordinate(1, -1))
+            XCTAssertEqual(distance1.rounded(to: 6), distance2.rounded(to: 6))
+        }
     }
     
-    func testCustomStringConvertible() {
-        XCTAssertEqual("\(cambridge)", "52.205,0.119")
-        XCTAssertEqual("\(paris)", "48.857,2.351")
+    func testRhumbBearing() {
+        // test('bearing',               function() { dov.rhumbBearingTo(cal).toFixed(1).should.equal('116.7'); });
+        do {
+            let bearing = dov.rhumbBearing(to: cal)
+            XCTAssertEqual(bearing.rounded(to: 1), 116.7)
+        }
+        
+        // test('bearing dateline',      function() { new LatLon(1, -179).rhumbBearingTo(new LatLon(1, 179)).should.equal(270); });
+        do {
+            let bearing = Coordinate(1, -179).rhumbBearing(to: Coordinate(1, 179))
+            XCTAssertEqual(bearing, 270)
+        }
+        
+        // test('bearing dateline',      function() { new LatLon(1, 179).rhumbBearingTo(new LatLon(1, -179)).should.equal(90); });
+        do {
+            let bearing = Coordinate(1, 179).rhumbBearing(to: Coordinate(1, -179))
+            XCTAssertEqual(bearing, 90)
+        }
     }
     
-    func testLosslessStringConvertible() {
-        XCTAssertEqual(Coordinate("\(cambridge)"), cambridge)
-        XCTAssertEqual(Coordinate("\(paris)"), paris)
-        XCTAssertEqual(Coordinate("52.205,0.119"), cambridge)
-        XCTAssertEqual(Coordinate("48.857,2.351"), paris)
-        XCTAssertNil(Coordinate("INVALID_STRING"))
-        XCTAssertNil(Coordinate("42"))
-        XCTAssertNil(Coordinate("42,"))
-        XCTAssertNil(Coordinate(",42"))
-        XCTAssertNil(Coordinate("1,2,3"))
+    func testRhumbDestination() {
+        // test('dest’n',                function() { dov.rhumbDestinationPoint(40310, 116.7).toString('d').should.equal('50.9641°N, 001.8531°E'); });
+        do {
+            let destination = dov.rhumbDestination(with: 40310, bearing: 116.7)
+            XCTAssertEqual(destination.latitude.rounded(to: 6), 50.964114)
+            XCTAssertEqual(destination.longitude.rounded(to: 6), 1.853128)
+        }
+        
+        // test('dest’n',                function() { new LatLon(1, 1).rhumbDestinationPoint(111178, 90).toString('d').should.equal('01.0000°N, 002.0000°E'); });
+        do {
+            let destination = Coordinate(1, 1).rhumbDestination(with: 111178, bearing: 90)
+            XCTAssertEqual(destination.latitude.rounded(to: 6), 1)
+            XCTAssertEqual(destination.longitude.rounded(to: 6), 2)
+        }
+        
+        // test('dest’n dateline',       function() { new LatLon(1, 179).rhumbDestinationPoint(222356, 90).toString('d').should.equal('01.0000°N, 179.0000°W'); });
+        do {
+            let destination = Coordinate(1, 179).rhumbDestination(with: 222356, bearing: 90)
+            XCTAssertEqual(destination.latitude.rounded(to: 6), 1)
+            XCTAssertEqual(destination.longitude.rounded(to: 6), -179)
+        }
+        
+        // test('dest’n dateline',       function() { new LatLon(1, -179).rhumbDestinationPoint(222356, 270).toString('d').should.equal('01.0000°N, 179.0000°E'); });
+        do {
+            let destination = Coordinate(1, -179).rhumbDestination(with: 222356, bearing: 270)
+            XCTAssertEqual(destination.latitude.rounded(to: 6), 1)
+            XCTAssertEqual(destination.longitude.rounded(to: 6), 179)
+        }
+        
+        do {
+            // Invalid coordinates check to get complete code coverage
+            _ = Coordinate(180, 0).rhumbDestination(with: 222356, bearing: 270)
+        }
+    }
+    
+    func testRhumbMidpoint() {
+        // test('midpoint',              function() { dov.rhumbMidpointTo(cal).toString('d').should.equal('51.0455°N, 001.5957°E'); });
+        do {
+            let midpoint = dov.rhumbMidpoint(to: cal)
+            XCTAssertEqual(midpoint.latitude.rounded(to: 6), 51.0455)
+            XCTAssertEqual(midpoint.longitude.rounded(to: 6), 1.595727)
+        }
+        
+        // test('midpoint dateline',     function() { new LatLon(1, -179).rhumbMidpointTo(new LatLon(1, 178)).toString('d').should.equal('01.0000°N, 179.5000°E'); });
+        do {
+            let midpoint = Coordinate(1, -179).rhumbMidpoint(to: Coordinate(1, 178))
+            XCTAssertEqual(midpoint.latitude.rounded(to: 6), 1)
+            XCTAssertEqual(midpoint.longitude.rounded(to: 6), 179.5)
+        }
     }
 }

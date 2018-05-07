@@ -434,5 +434,10 @@ final class GeodesySphericalTest: XCTestCase {
             let area = Coordinate.area(of: polyConcave)!
             XCTAssertEqual(area.rounded(to: 0), 74042699236)
         }
+        
+        do {
+            let distance = Coordinate.area(of: [])
+            XCTAssertNil(distance)
+        }
     }
 }

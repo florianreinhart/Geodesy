@@ -41,7 +41,7 @@ public extension Radians {
 }
 
 /// A coordinate consisting of latitude and longitude
-public struct Coordinate {
+public struct Coordinate: Equatable, Hashable {
     fileprivate static let earthRadius = Distance(6371e3)
     
     public var latitude: Degrees
@@ -55,15 +55,14 @@ public struct Coordinate {
     public init(_ latitude: Degrees, _ longitude: Degrees) {
         self.init(latitude: latitude, longitude: longitude)
     }
-}
-
-extension Coordinate: Equatable {
+    
+    #if swift(>=4.1)
+    // Use default implementation of Equatable and Hashable
+    #else
     public static func ==(lhs: Coordinate, rhs: Coordinate) -> Bool {
         return lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
     }
-}
-
-extension Coordinate: Hashable {
+    
     public var hashValue: Int {
         // DJB Hash Function
         var hash = 5381
@@ -71,6 +70,7 @@ extension Coordinate: Hashable {
         hash = ((hash << 5) &+ hash) &+ self.longitude.hashValue
         return hash
     }
+    #endif
 }
 
 extension Coordinate: CustomStringConvertible {

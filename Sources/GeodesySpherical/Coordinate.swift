@@ -42,7 +42,8 @@ public extension Radians {
 
 /// A coordinate consisting of latitude and longitude
 public struct Coordinate: Equatable, Hashable {
-    fileprivate static let earthRadius = Distance(6371e3)
+    /// Radius of the earth in meters: 6,371,000m
+    public static let earthRadius = Distance(6371e3)
     
     public var latitude: Degrees
     public var longitude: Degrees
@@ -97,15 +98,15 @@ public extension Coordinate {
      Calculates the distance to a destination coordinate in meters (using haversine formula).
      
      - Parameter coordinate: The destination coordinate
+     - Parameter radius: (Mean) radius of earth (defaults to radius in meters).
      
      - Returns: The distance from this coordinate to the destination in meters
      */
-    public func distance(to coordinate: Coordinate) -> Distance {
+    public func distance(to coordinate: Coordinate, radius: Distance = Coordinate.earthRadius) -> Distance {
         // a = sin²(Δφ/2) + cos(φ1)⋅cos(φ2)⋅sin²(Δλ/2)
         // tanδ = √(a) / √(1−a)
         // see http://mathforum.org/library/drmath/view/51879.html for derivation
         
-        let R = Coordinate.earthRadius
         let φ1 = Radians(degrees: self.latitude)
         let λ1 = Radians(degrees: self.longitude)
         let φ2 = Radians(degrees: coordinate.latitude)
@@ -113,11 +114,11 @@ public extension Coordinate {
         let Δφ = φ2 - φ1
         let Δλ = λ2 - λ1
         
-        let a = sin(Δφ/2) * sin(Δφ/2)
+        let a = sin(Δφ / 2) * sin(Δφ / 2)
             + cos(φ1) * cos(φ2)
-            * sin(Δλ/2) * sin(Δλ/2)
+            * sin(Δλ / 2) * sin(Δλ / 2)
         let c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        let d = R * c
+        let d = radius * c
         
         return d
     }
@@ -213,17 +214,17 @@ public extension Coordinate {
         // distance between points
         let Δφ = φ2 - φ1
         let Δλ = λ2 - λ1
-        let a = sin(Δφ/2) * sin(Δφ/2) + cos(φ1) * cos(φ2) * sin(Δλ/2) * sin(Δλ/2)
+        let a = sin(Δφ / 2) * sin(Δφ / 2) + cos(φ1) * cos(φ2) * sin(Δλ / 2) * sin(Δλ / 2)
         let δ = 2 * atan2(sqrt(a), sqrt(1-a))
         
-        let A = sin((1-fraction)*δ) / sin(δ)
-        let B = sin(fraction*δ) / sin(δ)
+        let A = sin((1-fraction) * δ) / sin(δ)
+        let B = sin(fraction * δ) / sin(δ)
         
         let x = A * cosφ1 * cosλ1 + B * cosφ2 * cosλ2
         let y = A * cosφ1 * sinλ1 + B * cosφ2 * sinλ2
         let z = A * sinφ1 + B * sinφ2
         
-        let φ3 = atan2(z, sqrt(x*x + y*y))
+        let φ3 = atan2(z, sqrt(x * x + y * y))
         let λ3 = atan2(y, x)
         
         return Coordinate(latitude: Degrees(radians: φ3), longitude: (Degrees(radians: λ3) + 540).truncatingRemainder(dividingBy: 360) - 180) // normalise lon to −180..+180°
@@ -235,15 +236,16 @@ public extension Coordinate {
      
      - Parameter distance Distance to travel in meters
      - Parameter bearing: The initial bearing in degrees from north
+     - Parameter radius: (Mean) radius of earth (defaults to radius in meters).
      
      - Returns: The destination coordinate
      */
-    public func destination(with distance: Distance, bearing: Degrees) -> Coordinate {
+    public func destination(with distance: Distance, bearing: Degrees, radius: Distance = Coordinate.earthRadius) -> Coordinate {
         // sinφ2 = sinφ1⋅cosδ + cosφ1⋅sinδ⋅cosθ
         // tanΔλ = sinθ⋅sinδ⋅cosφ1 / cosδ−sinφ1⋅sinφ2
-        // see http://williams.best.vwh.net/avform.htm#LL
+        // see http://mathforum.org/library/drmath/view/52049.html for derivation
         
-        let δ = distance / Coordinate.earthRadius // angular distance in radians
+        let δ = distance / radius // angular distance in radians
         let θ = Radians(degrees: bearing)
         
         let φ1 = Radians(degrees: self.latitude)
@@ -274,7 +276,7 @@ public extension Coordinate {
      - Returns: The intersection coordinate or `nil` if there is no unique intersection
      */
     public static func intersection(of path1: (coordinate: Coordinate, bearing: Degrees), with path2: (coordinate: Coordinate, bearing: Degrees)) -> Coordinate? {
-        // see http://williams.best.vwh.net/avform.htm#Intersection
+        // see http://www.edwilliams.org/avform.htm#Intersection
         
         let φ1 = Radians(degrees: path1.coordinate.latitude)
         let λ1 = Radians(degrees: path1.coordinate.longitude)
@@ -282,27 +284,28 @@ public extension Coordinate {
         let λ2 = Radians(degrees: path2.coordinate.longitude)
         let θ13 = Radians(degrees: path1.bearing)
         let θ23 = Radians(degrees: path2.bearing)
-        let Δφ = φ2-φ1
-        let Δλ = λ2-λ1
+        let Δφ = φ2 - φ1
+        let Δλ = λ2 - λ1
         
-        let δ12 = 2*asin( sqrt( sin(Δφ/2)*sin(Δφ/2) + cos(φ1)*cos(φ2)*sin(Δλ/2)*sin(Δλ/2) ) )
+        // angular distance p1-p2
+        let δ12 = 2 * asin(sqrt(sin(Δφ / 2) * sin(Δφ / 2) + cos(φ1) * cos(φ2) * sin(Δλ / 2) * sin(Δλ / 2)))
         
         guard δ12 != 0 else {
             return nil
         }
         
         // initial/final bearings between points
-        var θa = acos( ( sin(φ2) - sin(φ1)*cos(δ12) ) / ( sin(δ12)*cos(φ1) ) )
+        var θa = acos((sin(φ2) - sin(φ1) * cos(δ12)) / (sin(δ12) * cos(φ1)))
         if θa.isNaN {
             θa = 0 // protect against rounding
         }
-        let θb = acos( ( sin(φ1) - sin(φ2)*cos(δ12) ) / ( sin(δ12)*cos(φ2) ) )
+        let θb = acos((sin(φ1) - sin(φ2) * cos(δ12)) / (sin(δ12) * cos(φ2)))
         
-        let θ12 = sin(λ2-λ1)>0 ? θa : 2*Double.pi-θa
-        let θ21 = sin(λ2-λ1)>0 ? 2*Double.pi-θb : θb
+        let θ12 = sin(λ2 - λ1) > 0 ? θa : 2 * Double.pi - θa
+        let θ21 = sin(λ2 - λ1) > 0 ? 2 * Double.pi - θb : θb
         
-        let α1 = (θ13 - θ12 + Double.pi).truncatingRemainder(dividingBy: 2*Double.pi) - Double.pi // angle 2-1-3
-        let α2 = (θ21 - θ23 + Double.pi).truncatingRemainder(dividingBy: 2*Double.pi) - Double.pi // angle 1-2-3
+        let α1 = (θ13 - θ12 + Double.pi).truncatingRemainder(dividingBy: 2 * Double.pi) - Double.pi // angle 2-1-3
+        let α2 = (θ21 - θ23 + Double.pi).truncatingRemainder(dividingBy: 2 * Double.pi) - Double.pi // angle 1-2-3
         
         // This is actually testing for: sin(α1) != 0 || sin(α2) != 0
         // However, due to the nature of floating point values sin(n * Double.pi) is not 0.
@@ -314,17 +317,13 @@ public extension Coordinate {
             return nil // ambiguous intersection
         }
         
-        //α1 = abs(α1)
-        //α2 = abs(α2)
-        // ... Ed Williams takes abs of α1/α2, but seems to break calculation?
-        
-        let α3 = acos( -cos(α1)*cos(α2) + sin(α1)*sin(α2)*cos(δ12) )
-        let δ13 = atan2( sin(δ12)*sin(α1)*sin(α2), cos(α2)+cos(α1)*cos(α3) )
-        let φ3 = asin( sin(φ1)*cos(δ13) + cos(φ1)*sin(δ13)*cos(θ13) )
-        let Δλ13 = atan2( sin(θ13)*sin(δ13)*cos(φ1), cos(δ13)-sin(φ1)*sin(φ3) )
+        let α3 = acos(-cos(α1) * cos(α2) + sin(α1) * sin(α2) * cos(δ12))
+        let δ13 = atan2(sin(δ12) * sin(α1) * sin(α2), cos(α2) + cos(α1) * cos(α3))
+        let φ3 = asin(sin(φ1) * cos(δ13) + cos(φ1) * sin(δ13) * cos(θ13))
+        let Δλ13 = atan2(sin(θ13) * sin(δ13) * cos(φ1), cos(δ13) - sin(φ1) * sin(φ3))
         let λ3 = λ1 + Δλ13
         
-        return Coordinate(latitude: Degrees(radians: φ3), longitude: (Degrees(radians: λ3) + 540).truncatingRemainder(dividingBy: 360) - 180) // normalise to −180..+180°
+        return Coordinate(Degrees(radians: φ3), (Degrees(radians: λ3) + 540).truncatingRemainder(dividingBy: 360) - 180) // normalise to −180..+180°
     }
     
     /**
@@ -332,17 +331,18 @@ public extension Coordinate {
      
      - Parameter pathStart: The start coordinate of the great circle path.
      - Parameter pathStart: The end coordinate of the great circle path.
+     - Parameter radius: (Mean) radius of earth (defaults to radius in meters).
      
      - Returns: The distance to the great circle (-ve if to left, +ve if to right of path).
      */
-    public func crossTrackDistance(toPath path:(start: Coordinate, end: Coordinate)) -> Distance {
-        let δ13 = path.start.distance(to: self) / Coordinate.earthRadius
+    public func crossTrackDistance(toPath path:(start: Coordinate, end: Coordinate), radius: Distance = Coordinate.earthRadius) -> Distance {
+        let δ13 = path.start.distance(to: self) / radius
         let θ13 = Radians(degrees: path.start.bearing(to: self))
         let θ12 = Radians(degrees: path.start.bearing(to: path.end))
         
         let δ = asin( sin(δ13) * sin(θ13-θ12) )
         
-        return δ * Coordinate.earthRadius
+        return δ * radius
     }
     
     /**
@@ -350,16 +350,13 @@ public extension Coordinate {
      That is, if a perpendicular is drawn from ‘this’ point to the (great circle) path, the along-track
      distance is the distance from the start point to where the perpendicular crosses the path.
      
-     - Parameter toPath: Great circle path defined by start and end coordinate.
+     - Parameter path: Great circle path defined by start and end coordinate.
+     - Parameter radius: (Mean) radius of earth (defaults to radius in meters).
      
      - Returns: The distance along the path.
      */
-    public func alongTrackDistance(toPath path: (start: Coordinate, end: Coordinate)) -> Distance {
-        let R = Coordinate.earthRadius
-        
-        print("start: \(path.start)")
-        print("end: \(path.end)")
-        let δ13 = path.start.distance(to: self) / R
+    public func alongTrackDistance(toPath path: (start: Coordinate, end: Coordinate), radius: Distance = Coordinate.earthRadius) -> Distance {
+        let δ13 = path.start.distance(to: self) / radius
         let θ13 = Radians(degrees: path.start.bearing(to: self))
         let θ12 = Radians(degrees: path.start.bearing(to: path.end))
         
@@ -367,7 +364,7 @@ public extension Coordinate {
         
         let δat = acos(cos(δ13) / abs(cos(δxt)))
         
-        return δat * cos(θ12 - θ13).sign * R
+        return δat * cos(θ12 - θ13).sign * radius
     }
     
     /**
@@ -439,13 +436,13 @@ public extension Coordinate {
      Calculates the distance to a destination coordinate along a rhumb line.
      
      - Parameter coordinate: The destination coordinate
+     - Parameter radius: (Mean) radius of earth (defaults to radius in meters).
      
      - Returns: The distance from this coordinate to the destination along a rhumb line
      */
-    public func rhumbDistance(to coordinate: Coordinate) -> Distance {
+    public func rhumbDistance(to coordinate: Coordinate, radius: Distance = Coordinate.earthRadius) -> Distance {
         // see www.edwilliams.org/avform.htm#Rhumb
         
-        let R = Coordinate.earthRadius
         let φ1 = Radians(degrees: self.latitude)
         let φ2 = Radians(degrees: coordinate.latitude)
         let Δφ = φ2 - φ1
@@ -462,7 +459,7 @@ public extension Coordinate {
         
         // distance is pythagoras on 'stretched' Mercator projection
         let δ = sqrt((Δφ * Δφ) + (q * q * Δλ * Δλ)) // angular distance in radians
-        let dist = δ * R
+        let dist = δ * radius
         
         return dist
     }
@@ -499,12 +496,11 @@ public extension Coordinate {
      
      - Parameter distance Distance to travel in meters
      - Parameter bearing: The bearing in degrees from north
+     - Parameter radius: (Mean) radius of earth (defaults to radius in meters).
      
      - Returns: The destination coordinate
      */
-    public func rhumbDestination(with distance: Distance, bearing: Degrees) -> Coordinate {
-        let radius = Coordinate.earthRadius
-        
+    public func rhumbDestination(with distance: Distance, bearing: Degrees, radius: Distance = Coordinate.earthRadius) -> Coordinate {
         let δ = distance / radius // angular distance in radians
         let φ1 = Radians(degrees: self.latitude)
         let λ1 = Radians(degrees: self.longitude)
@@ -571,10 +567,11 @@ public extension Coordinate {
      arcs joining the vertices.
      
      - Parameter polygon: Array of coordinates defining vertices of the polygon.
+     - Parameter radius: (Mean) radius of earth (defaults to radius in meters).
      
      - Returns: The area of the polygon.
      */
-    public static func area(of polygon: [Coordinate]) -> Double? {
+    public static func area(of polygon: [Coordinate], radius: Distance = Coordinate.earthRadius) -> Double? {
         guard polygon.count >= 3 else {
             return nil
         }
@@ -582,8 +579,6 @@ public extension Coordinate {
         // uses method due to Karney: http://osgeo-org.1560.x6.nabble.com/Area-of-a-spherical-polygon-td3841625.html
         // for each edge of the polygon, tan(E/2) = tan(Δλ/2)·(tan(φ1/2) + tan(φ2/2)) / (1 + tan(φ1/2)·tan(φ2/2))
         // where E is the spherical excess of the trapezium obtained by extending the edge to the equator
-        
-        let R = Coordinate.earthRadius
         
         // close polygon so that last point equals first point
         var polygon = polygon
@@ -626,7 +621,7 @@ public extension Coordinate {
             S = abs(S) - 2 * Double.pi
         }
         
-        let A = abs(S * R * R) // area in units of R
+        let A = abs(S * radius * radius) // area in units of R
         
         return A
     }

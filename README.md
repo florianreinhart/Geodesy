@@ -1,6 +1,6 @@
 # Geodesy Functions for Swift
 
-![Swift](http://img.shields.io/badge/swift-4.1-brightgreen.svg)
+![Swift](http://img.shields.io/badge/swift-4.2-brightgreen.svg)
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Linux-blue.svg)
 ![Package Managers](https://img.shields.io/badge/package%20managers-SwiftPM-yellow.svg)
 [![Latest Release](https://img.shields.io/github/release/florianreinhart/Geodesy.svg)](https://github.com/florianreinhart/Geodesy/releases/latest)

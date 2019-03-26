@@ -17,7 +17,7 @@ public typealias Radians = Double
 public typealias Distance = Double
 
 internal extension Double {
-    internal var sign:  Double {
+    var sign: Double {
         if self < 0 {
             return -1
         } else if self == 0 {
@@ -29,13 +29,13 @@ internal extension Double {
 }
 
 public extension Degrees {
-    public init(radians: Radians) {
+    init(radians: Radians) {
         self = radians * 180 / Double.pi
     }
 }
 
 public extension Radians {
-    public init(degrees: Degrees) {
+    init(degrees: Degrees) {
         self = degrees * Double.pi / 180
     }
 }
@@ -102,7 +102,7 @@ public extension Coordinate {
      
      - Returns: The distance from this coordinate to the destination in meters
      */
-    public func distance(to coordinate: Coordinate, radius: Distance = Coordinate.earthRadius) -> Distance {
+    func distance(to coordinate: Coordinate, radius: Distance = Coordinate.earthRadius) -> Distance {
         // a = sin²(Δφ/2) + cos(φ1)⋅cos(φ2)⋅sin²(Δλ/2)
         // tanδ = √(a) / √(1−a)
         // see http://mathforum.org/library/drmath/view/51879.html for derivation
@@ -130,7 +130,7 @@ public extension Coordinate {
      
      - Returns: The *initial* bearing to the destination in degrees from north.
      */
-    public func bearing(to coordinate: Coordinate) -> Degrees {
+    func bearing(to coordinate: Coordinate) -> Degrees {
         // tanθ = sinΔλ⋅cosφ2 / cosφ1⋅sinφ2 − sinφ1⋅cosφ2⋅cosΔλ
         // see http://mathforum.org/library/drmath/view/55417.html for derivation
         
@@ -155,7 +155,7 @@ public extension Coordinate {
      
      - Returns: The *final* bearing to the destination in degrees from north.
      */
-    public func finalBearing(to coordinate: Coordinate) -> Degrees {
+    func finalBearing(to coordinate: Coordinate) -> Degrees {
         // get initial bearing from destination point to this point & reverse it by adding 180°
         return (coordinate.bearing(to: self) + 180).truncatingRemainder(dividingBy: 360)
     }
@@ -167,7 +167,7 @@ public extension Coordinate {
      
      - Returns: The midpoint between this coordinate and the given coordinate.
      */
-    public func midpoint(to coordinate: Coordinate) -> Coordinate {
+    func midpoint(to coordinate: Coordinate) -> Coordinate {
         // φm = atan2( sinφ1 + sinφ2, √( (cosφ1 + cosφ2⋅cosΔλ) ⋅ (cosφ1 + cosφ2⋅cosΔλ) ) + cos²φ2⋅sin²Δλ )
         // λm = λ1 + atan2(cosφ2⋅sinΔλ, cosφ1 + cosφ2⋅cosΔλ)
         // see http://mathforum.org/library/drmath/view/51822.html for derivation
@@ -197,7 +197,7 @@ public extension Coordinate {
      
      - Returns: The intermediate coordinate between this coordinate and the destination.
      */
-    public func intermediatePoint(to coordinate: Coordinate, fraction: Double) -> Coordinate {
+    func intermediatePoint(to coordinate: Coordinate, fraction: Double) -> Coordinate {
         let φ1 = Radians(degrees: self.latitude)
         let λ1 = Radians(degrees: self.longitude)
         let φ2 = Radians(degrees: coordinate.latitude)
@@ -240,7 +240,7 @@ public extension Coordinate {
      
      - Returns: The destination coordinate
      */
-    public func destination(with distance: Distance, bearing: Degrees, radius: Distance = Coordinate.earthRadius) -> Coordinate {
+    func destination(with distance: Distance, bearing: Degrees, radius: Distance = Coordinate.earthRadius) -> Coordinate {
         // sinφ2 = sinφ1⋅cosδ + cosφ1⋅sinδ⋅cosθ
         // tanΔλ = sinθ⋅sinδ⋅cosφ1 / cosδ−sinφ1⋅sinφ2
         // see http://mathforum.org/library/drmath/view/52049.html for derivation
@@ -275,7 +275,7 @@ public extension Coordinate {
      
      - Returns: The intersection coordinate or `nil` if there is no unique intersection
      */
-    public static func intersection(of path1: (coordinate: Coordinate, bearing: Degrees), with path2: (coordinate: Coordinate, bearing: Degrees)) -> Coordinate? {
+    static func intersection(of path1: (coordinate: Coordinate, bearing: Degrees), with path2: (coordinate: Coordinate, bearing: Degrees)) -> Coordinate? {
         // see http://www.edwilliams.org/avform.htm#Intersection
         
         let φ1 = Radians(degrees: path1.coordinate.latitude)
@@ -335,7 +335,7 @@ public extension Coordinate {
      
      - Returns: The distance to the great circle (-ve if to left, +ve if to right of path).
      */
-    public func crossTrackDistance(toPath path:(start: Coordinate, end: Coordinate), radius: Distance = Coordinate.earthRadius) -> Distance {
+    func crossTrackDistance(toPath path:(start: Coordinate, end: Coordinate), radius: Distance = Coordinate.earthRadius) -> Distance {
         let δ13 = path.start.distance(to: self) / radius
         let θ13 = Radians(degrees: path.start.bearing(to: self))
         let θ12 = Radians(degrees: path.start.bearing(to: path.end))
@@ -355,7 +355,7 @@ public extension Coordinate {
      
      - Returns: The distance along the path.
      */
-    public func alongTrackDistance(toPath path: (start: Coordinate, end: Coordinate), radius: Distance = Coordinate.earthRadius) -> Distance {
+    func alongTrackDistance(toPath path: (start: Coordinate, end: Coordinate), radius: Distance = Coordinate.earthRadius) -> Distance {
         let δ13 = path.start.distance(to: self) / radius
         let θ13 = Radians(degrees: path.start.bearing(to: self))
         let θ12 = Radians(degrees: path.start.bearing(to: path.end))
@@ -377,7 +377,7 @@ public extension Coordinate {
      
      - Returns: The maxium latitude reached.
      */
-    public func maxLatitude(with bearing: Degrees) -> Degrees {
+    func maxLatitude(with bearing: Degrees) -> Degrees {
         let θ = Radians(degrees: bearing)
         
         let φ = Radians(degrees: self.latitude)
@@ -397,7 +397,7 @@ public extension Coordinate {
      
      - Returns: A tupel containing to longitude values or `nil` if the given latitude is not reached.
      */
-    public static func crossingParallels(coordinate1: Coordinate, coordinate2: Coordinate, latitude: Degrees) -> (longitude1: Degrees, longitude2: Degrees)? {
+    static func crossingParallels(coordinate1: Coordinate, coordinate2: Coordinate, latitude: Degrees) -> (longitude1: Degrees, longitude2: Degrees)? {
         let φ = Radians(degrees: latitude)
     
         let φ1 = Radians(degrees: coordinate1.latitude)
@@ -440,7 +440,7 @@ public extension Coordinate {
      
      - Returns: The distance from this coordinate to the destination along a rhumb line
      */
-    public func rhumbDistance(to coordinate: Coordinate, radius: Distance = Coordinate.earthRadius) -> Distance {
+    func rhumbDistance(to coordinate: Coordinate, radius: Distance = Coordinate.earthRadius) -> Distance {
         // see www.edwilliams.org/avform.htm#Rhumb
         
         let φ1 = Radians(degrees: self.latitude)
@@ -471,7 +471,7 @@ public extension Coordinate {
      
      - Returns: The bearing to the destination along a rhumb line in degrees from north.
      */
-    public func rhumbBearing(to coordinate: Coordinate) -> Degrees {
+    func rhumbBearing(to coordinate: Coordinate) -> Degrees {
         let φ1 = Radians(degrees: self.latitude)
         let φ2 = Radians(degrees: coordinate.latitude)
         var Δλ = Radians(degrees: coordinate.longitude - self.longitude)
@@ -500,7 +500,7 @@ public extension Coordinate {
      
      - Returns: The destination coordinate
      */
-    public func rhumbDestination(with distance: Distance, bearing: Degrees, radius: Distance = Coordinate.earthRadius) -> Coordinate {
+    func rhumbDestination(with distance: Distance, bearing: Degrees, radius: Distance = Coordinate.earthRadius) -> Coordinate {
         let δ = distance / radius // angular distance in radians
         let φ1 = Radians(degrees: self.latitude)
         let λ1 = Radians(degrees: self.longitude)
@@ -530,7 +530,7 @@ public extension Coordinate {
      
      - Returns: The midpoint between this coordinate and the given coordinate.
      */
-    public func rhumbMidpoint(to coordinate: Coordinate) -> Coordinate {
+    func rhumbMidpoint(to coordinate: Coordinate) -> Coordinate {
         // see http://mathforum.org/kb/message.jspa?messageID=148837
         
         let φ1 = Radians(degrees: self.latitude)
@@ -571,7 +571,7 @@ public extension Coordinate {
      
      - Returns: The area of the polygon.
      */
-    public static func area(of polygon: [Coordinate], radius: Distance = Coordinate.earthRadius) -> Double? {
+    static func area(of polygon: [Coordinate], radius: Distance = Coordinate.earthRadius) -> Double? {
         guard polygon.count >= 3 else {
             return nil
         }

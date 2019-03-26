@@ -3,11 +3,14 @@ matrix:
     - {os: osx,  osx_image: xcode9.2,  language: objective-c}
     - {os: osx,  osx_image: xcode9.3,  language: objective-c}
     - {os: osx,  osx_image: xcode10.0,  language: objective-c}
-    
+    - {os: osx,  osx_image: xcode10.1,  language: objective-c}
+    - {os: osx,  osx_image: xcode10.2,  language: objective-c}
+
     - {os: linux,  dist: trusty,  sudo: required,  language: generic,  env: 'SWIFT_VERSION=4.0'}
     - {os: linux,  dist: trusty,  sudo: required,  language: generic,  env: 'SWIFT_VERSION=4.1'}
     - {os: linux,  dist: trusty,  sudo: required,  language: generic,  env: 'SWIFT_VERSION=4.2'}
-    
+    - {os: linux,  dist: trusty,  sudo: required,  language: generic,  env: 'SWIFT_VERSION=5.0'}
+
 install:
   if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     eval "$(curl -sL https://swiftenv.fuller.li/install.sh)";

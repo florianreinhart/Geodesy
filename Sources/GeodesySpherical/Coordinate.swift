@@ -586,7 +586,7 @@ public extension Coordinate {
             polygon.append(polygon.first!)
         }
         
-        var nVertices = polygon.count - 1
+        let nVertices = polygon.count - 1
         
         var S: Double = 0 // spherical excess in steradians
         for v in 0 ..< nVertices  {

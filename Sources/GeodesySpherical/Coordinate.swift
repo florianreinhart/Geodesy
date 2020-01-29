@@ -590,10 +590,10 @@ public extension Coordinate {
         
         var S: Double = 0 // spherical excess in steradians
         for v in 0 ..< nVertices  {
-            var φ1 = Radians(degrees: polygon[v].latitude)
-            var φ2 = Radians(degrees: polygon[v + 1].latitude)
-            var Δλ = Radians(degrees: polygon[v + 1].longitude - polygon[v].longitude)
-            var E = 2 * atan2(tan(Δλ / 2) * (tan(φ1 / 2) + tan(φ2 / 2)), 1 + tan(φ1 / 2) * tan(φ2 / 2))
+            let φ1 = Radians(degrees: polygon[v].latitude)
+            let φ2 = Radians(degrees: polygon[v + 1].latitude)
+            let Δλ = Radians(degrees: polygon[v + 1].longitude - polygon[v].longitude)
+            let E = 2 * atan2(tan(Δλ / 2) * (tan(φ1 / 2) + tan(φ2 / 2)), 1 + tan(φ1 / 2) * tan(φ2 / 2))
             S += E
         }
         

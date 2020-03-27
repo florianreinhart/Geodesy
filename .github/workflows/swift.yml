@@ -15,7 +15,7 @@ jobs:
       run: swift build -v -c release
     - name: Run tests
       run: swift test -v
-  linux-5.2:
+  linux-5-2:
     runs-on: ubuntu-latest
     container:
       image: swift:5.2
@@ -25,7 +25,7 @@ jobs:
       run: swift build -v -c release
     - name: Run tests
       run: swift test -v
-  linux-5.1:
+  linux-5-1:
     runs-on: ubuntu-latest
     container:
       image: swift:5.1
@@ -35,7 +35,7 @@ jobs:
       run: swift build -v -c release
     - name: Run tests
       run: swift test -v
-  linux-5.0:
+  linux-5-0:
     runs-on: ubuntu-latest
     container:
       image: swift:5.0

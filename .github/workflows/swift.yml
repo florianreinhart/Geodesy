@@ -1,4 +1,4 @@
-name: Swift
+name: test
 
 on:
   push:
@@ -7,13 +7,41 @@ on:
     - cron: "0 12 * * 2"
 
 jobs:
-  build:
-
+  macOS:
     runs-on: macos-latest
-
     steps:
     - uses: actions/checkout@v2
-    - name: Build
+    - name: Release build
+      run: swift build -v -c release
+    - name: Run tests
+      run: swift test -v
+  linux-5.2:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:5.2
+    steps:
+    - uses: actions/checkout@v2
+    - name: Release build
+      run: swift build -v -c release
+    - name: Run tests
+      run: swift test -v
+  linux-5.1:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:5.1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Release build
+      run: swift build -v -c release
+    - name: Run tests
+      run: swift test -v
+  linux-5.0:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:5.0
+    steps:
+    - uses: actions/checkout@v2
+    - name: Release build
       run: swift build -v -c release
     - name: Run tests
       run: swift test -v

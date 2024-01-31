@@ -6,7 +6,7 @@
 //
 //
 
-#if os(OSX) || os(iOS)
+#if os(OSX) || os(iOS) || os(visionOS)
     import Darwin
 #elseif os(Linux)
     import Glibc

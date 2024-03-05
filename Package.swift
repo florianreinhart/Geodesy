@@ -9,8 +9,7 @@ let package = Package(
             name: "Geodesy",
             targets: ["GeodesySpherical"]),
     ],
-    dependencies: [
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "GeodesySpherical",

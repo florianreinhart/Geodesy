@@ -6,7 +6,7 @@
 //
 //
 
-#if os(OSX) || os(iOS)
+#if os(OSX) || os(iOS) || os(visionOS)
     import Darwin
 #elseif os(Linux)
     import Glibc
@@ -22,29 +22,6 @@ private extension Double {
 }
 
 final class GeodesySphericalTest: XCTestCase {
-    
-    static let allTests = [
-        ("testSign", testSign),
-        ("testHashable", testHashable),
-        ("testCustomStringConvertible", testCustomStringConvertible),
-        ("testLosslessStringConvertible", testLosslessStringConvertible),
-        ("testDistance", testDistance),
-        ("testInitialBearing", testInitialBearing),
-        ("testFinalBearing", testFinalBearing),
-        ("testMidpoint", testMidpoint),
-        ("testIntermediatePoint", testIntermediatePoint),
-        ("testDestination", testDestination),
-        ("testIntersection", testIntersection),
-        ("testCrossTrack", testCrossTrack),
-        ("testAlongTrackDistance", testAlongTrackDistance),
-        ("testMaxLatitude", testMaxLatitude),
-        ("testCrossingParallels", testCrossingParallels),
-        ("testRhumbDistance", testRhumbDistance),
-        ("testRhumbBearing", testRhumbBearing),
-        ("testRhumbDestination", testRhumbDestination),
-        ("testRhumbMidpoint", testRhumbMidpoint),
-        ("testArea", testArea),
-    ]
     
     private let cambridge = Coordinate(52.205, 0.119)
     private let paris = Coordinate(48.857, 2.351)

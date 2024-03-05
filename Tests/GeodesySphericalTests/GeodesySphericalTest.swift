@@ -6,10 +6,10 @@
 //
 //
 
-#if os(OSX) || os(iOS) || os(visionOS)
-    import Darwin
-#elseif os(Linux)
-    import Glibc
+#if canImport(Darwin)
+import Darwin
+#else
+import Glibc
 #endif
 import XCTest
 @testable import GeodesySpherical

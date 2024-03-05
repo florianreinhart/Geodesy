@@ -15,30 +15,30 @@ jobs:
       run: swift build -v -c release
     - name: Run tests
       run: swift test -v
+  linux-5-9:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:5.9
+    steps:
+    - uses: actions/checkout@v2
+    - name: Release build
+      run: swift build -v -c release
+    - name: Run tests
+      run: swift test -v
+  linux-5-8:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:5.8
+    steps:
+    - uses: actions/checkout@v2
+    - name: Release build
+      run: swift build -v -c release
+    - name: Run tests
+      run: swift test -v
   linux-5-7:
     runs-on: ubuntu-latest
     container:
       image: swift:5.7
-    steps:
-    - uses: actions/checkout@v2
-    - name: Release build
-      run: swift build -v -c release
-    - name: Run tests
-      run: swift test -v
-  linux-5-6:
-    runs-on: ubuntu-latest
-    container:
-      image: swift:5.6
-    steps:
-    - uses: actions/checkout@v2
-    - name: Release build
-      run: swift build -v -c release
-    - name: Run tests
-      run: swift test -v
-  linux-5-5:
-    runs-on: ubuntu-latest
-    container:
-      image: swift:5.5
     steps:
     - uses: actions/checkout@v2
     - name: Release build

@@ -1,11 +1,8 @@
 # Geodesy Functions for Swift
 
-![Swift](http://img.shields.io/badge/swift-5.2-brightgreen.svg)
-![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Linux-blue.svg)
-![Package Managers](https://img.shields.io/badge/package%20managers-SwiftPM-yellow.svg)
-[![Latest Release](https://img.shields.io/github/release/florianreinhart/Geodesy.svg)](https://github.com/florianreinhart/Geodesy/releases/latest)
-[![Build Status](https://github.com/florianreinhart/Geodesy/workflows/Swift/badge.svg)](https://github.com/florianreinhart/Geodesy/actions)
-[![Code Coverage](https://codecov.io/gh/florianreinhart/Geodesy/branch/master/graph/badge.svg)](https://codecov.io/gh/florianreinhart/Geodesy)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fflorianreinhart%2FGeodesy%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/florianreinhart/Geodesy)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fflorianreinhart%2FGeodesy%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/florianreinhart/Geodesy)
+[![Build](https://github.com/florianreinhart/Geodesy/workflows/test/badge.svg)](https://github.com/florianreinhart/Geodesy/actions)
 
 This is a port of the excellent [JavaScript geodesy module by Chris Veness](https://github.com/chrisveness/geodesy) to Swift.
 

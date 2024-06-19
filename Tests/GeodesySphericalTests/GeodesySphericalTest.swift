@@ -417,4 +417,16 @@ final class GeodesySphericalTest: XCTestCase {
             XCTAssertNil(distance)
         }
     }
+    
+#if canImport(CoreLocation)
+    func testCoreLocation() {
+        for coordinate in [cambridge, paris, greenwich, bradwell, dov, cal] {
+            XCTAssertEqual(coordinate, Coordinate(coordinate.clLocationCoordinate2D))
+            XCTAssertEqual(coordinate, Coordinate(coordinate.clLocation))
+            XCTAssertEqual(coordinate.clLocationCoordinate2D.latitude, coordinate.clLocation.coordinate.latitude)
+            XCTAssertEqual(coordinate.clLocationCoordinate2D.longitude, coordinate.clLocation.coordinate.longitude)
+        }
+    }
+#endif
+    
 }

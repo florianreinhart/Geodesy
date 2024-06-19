@@ -56,22 +56,6 @@ public struct Coordinate: Equatable, Hashable {
     public init(_ latitude: Degrees, _ longitude: Degrees) {
         self.init(latitude: latitude, longitude: longitude)
     }
-    
-    #if swift(>=4.1)
-    // Use default implementation of Equatable and Hashable
-    #else
-    public static func ==(lhs: Coordinate, rhs: Coordinate) -> Bool {
-        return lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
-    }
-    
-    public var hashValue: Int {
-        // DJB Hash Function
-        var hash = 5381
-        hash = ((hash << 5) &+ hash) &+ self.latitude.hashValue
-        hash = ((hash << 5) &+ hash) &+ self.longitude.hashValue
-        return hash
-    }
-    #endif
 }
 
 extension Coordinate: CustomStringConvertible {
